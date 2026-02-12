@@ -10,8 +10,18 @@ const firebaseConfig = {
 // ===============================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  getFirestore, collection, addDoc, getDocs, query, orderBy, doc, getDoc,
+  serverTimestamp, runTransaction, updateDoc, increment,
+  collectionGroup, limit,
+  setDoc, deleteDoc, where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getAuth, signInAnonymously, onAuthStateChanged,
+  GoogleAuthProvider, signInWithPopup, linkWithPopup
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /**
  * 重要：
