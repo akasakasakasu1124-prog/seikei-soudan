@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>質問詳細 | 整形相談室</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>質問詳細</h1>
+    <nav>
+      <a href="index.html">一覧</a>
+      <a href="ask.html">質問する</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <div id="status" class="muted">読み込み中…</div>
+
+    <h2 id="title" style="margin:10px 0 0"></h2>
+    <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
+      <span class="badge" id="cat"></span>
+      <span class="badge" id="reg"></span>
+      <span class="badge" id="who"></span>
+    </div>
+    <div id="tags" style="margin-top:10px"></div>
+    <div id="body" style="margin-top:12px;white-space:pre-wrap"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px">回答する</h3>
+
+    <label>表示名（任意）</label>
+    <input id="aName" placeholder="例：経験者 / 匿名">
+
+    <label>SNS（任意）</label>
+    <input id="aSocial" placeholder="例：X @xxxx / 空欄OK">
+
+    <label>回答本文（必須）</label>
+    <textarea id="aBody" placeholder="経験談・注意点など。断定や誹謗中傷は避けてください。"></textarea>
+
+    <div class="row" style="margin-top:10px">
+      <button id="aBtn" class="btn">回答を投稿</button>
+      <div id="aStatus" class="muted"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px">回答一覧</h3>
+    <div id="answers"></div>
+  </div>
+</main>
+
+<script type="module">
+  import { getQuestion, listAnswers, addAnswer, esc, containsDanger } from "./app.js";
+
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+
+  function renderAnswers(list){
+    const el = document.getElementById("answers");
+    if(!list.length){
+      el.innerHTML = `<div class="muted">まだ回答がありません。</div>`;
+      return;
+    }
+    el.innerHTML = list.map(a=>{
+      const d=a.data;
+      return `
+        <div class="qitem">
+          <div class="row" style="justify-content:space-between">
+            <div><b>${esc(d.displayName || "匿名")}</b> ${d.social?`<small>（${esc(d.social)}）</small>`:""}</div>
+          </div>
+          <div style="margin-top:8px;white-space:pre-wrap">${esc(d.body || "")}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  async function load(){
+    const status = document.getElementById("status");
+    if(!id){ status.textContent = "不正なURLです"; return; }
+    try{
+      const q = await getQuestion(id);
+      if(!q){ status.textContent = "質問が見つかりません"; return; }
+      const d=q.data;
+
+      document.getElementById("title").textContent = d.title || "";
+      document.getElementById("cat").textContent = "カテゴリ：" + (d.category || "未設定");
+      document.getElementById("reg").textContent = "地域：" + (d.region || "未設定");
+      document.getElementById("who").textContent = "投稿者：" + (d.displayName || "匿名") + (d.social?`（${d.social}）`:"");
+      document.getElementById("body").textContent = d.body || "";
+
+      const tags = Array.isArray(d.tags) ? d.tags : [];
+      document.getElementById("tags").innerHTML = tags.map(t=>`<span class="pill">#${esc(t)}</span>`).join("");
+
+      status.textContent = "";
+      const ans = await listAnswers(id);
+      renderAnswers(ans);
+    }catch(e){
+      console.error(e);
+      status.textContent = "読み込みエラー：" + (e?.message || e);
+    }
+  }
+
+  document.getElementById("aBtn").addEventListener("click", async ()=>{
+    const btn = document.getElementById("aBtn");
+    const st = document.getElementById("aStatus");
+    st.textContent = "";
+
+    const displayName = document.getElementById("aName").value.trim();
+    const social = document.getElementById("aSocial").value.trim();
+    const body = document.getElementById("aBody").value.trim();
+
+    if(!body){
+      alert("回答本文は必須です");
+      return;
+    }
+    if(containsDanger(body)){
+      alert("攻撃的・断定的な表現が含まれる可能性があります。言い回しを柔らかくしてください。");
+      return;
+    }
+
+    try{
+      btn.disabled = true;
+      st.textContent = "送信中…";
+      await addAnswer(id, { displayName, social, body });
+      document.getElementById("aBody").value = "";
+      st.textContent = "";
+      await load();
+    }catch(e){
+      console.error(e);
+      alert("回答できませんでした。Firestoreルール/匿名ログイン設定を確認してください。");
+      st.textContent = "エラー：" + (e?.message || e);
+    }finally{
+      btn.disabled = false;
+    }
+  });
+
+  load();
+</script>
+</body>
+</html>

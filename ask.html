@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>質問する | 整形相談室</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>質問する</h1>
+    <nav>
+      <a href="index.html">一覧</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <div class="muted">
+      ※医師名/店舗の詳細/個人情報はNG。<br>
+      ※断定・誹謗中傷は避けて「不安・疑問」の形に寄せるのが安全。
+    </div>
+
+    <label>表示名（任意）</label>
+    <input id="displayName" placeholder="例：あや / 匿名希望">
+
+    <label>SNS（任意）</label>
+    <input id="social" placeholder="例：X @xxxx / なし（空欄OK）">
+
+    <label>カテゴリ</label>
+    <select id="category">
+      <option>二重</option><option>鼻</option><option>輪郭</option><option>目元（クマ等）</option>
+      <option>美容皮膚</option><option>脱毛</option><option>その他</option>
+    </select>
+
+    <label>地域</label>
+    <select id="region">
+      <option>未設定</option><option>東京</option><option>神奈川</option><option>埼玉</option><option>千葉</option>
+      <option>大阪</option><option>その他</option>
+    </select>
+
+    <label>タイトル（必須）</label>
+    <input id="title" placeholder="例：埋没って取れやすい？ダウンタイムどれくらい？">
+
+    <label>本文（必須）</label>
+    <textarea id="body" placeholder="状況・不安・知りたいことを具体的に。"></textarea>
+
+    <label>タグ（任意・カンマ区切り）</label>
+    <input id="tags" placeholder="例：埋没, ダウンタイム, 学生, 親バレ">
+
+    <div class="row" style="margin-top:12px">
+      <button id="btn" class="btn">投稿する</button>
+      <div id="status" class="muted"></div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { createQuestion, containsDanger } from "./app.js";
+
+  document.getElementById("btn").addEventListener("click", async ()=>{
+    const btn = document.getElementById("btn");
+    const status = document.getElementById("status");
+    status.textContent = "";
+
+    const displayName = document.getElementById("displayName").value.trim();
+    const social = document.getElementById("social").value.trim();
+    const category = document.getElementById("category").value;
+    const region = document.getElementById("region").value;
+    const title = document.getElementById("title").value.trim();
+    const body = document.getElementById("body").value.trim();
+    const tagsRaw = document.getElementById("tags").value.trim();
+
+    if(!title || !body){
+      alert("タイトルと本文は必須です");
+      return;
+    }
+    if(containsDanger(title+" "+body+" "+tagsRaw)){
+      alert("攻撃的・断定的な表現が含まれる可能性があります。言い回しを柔らかくしてください。");
+      return;
+    }
+
+    const tags = tagsRaw ? tagsRaw.split(",").map(t=>t.trim()).filter(Boolean) : [];
+
+    try{
+      btn.disabled = true;
+      status.textContent = "送信中…";
+      const ref = await createQuestion({ displayName, social, category, region, title, body, tags });
+      location.href = `q.html?id=${encodeURIComponent(ref.id)}`;
+    }catch(e){
+      console.error(e);
+      alert("投稿できませんでした。Firestoreルール/匿名ログイン設定を確認してください。");
+      status.textContent = "エラー：" + (e?.message || e);
+    }finally{
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
