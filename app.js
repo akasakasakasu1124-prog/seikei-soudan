@@ -1,42 +1,28 @@
-// ===== Firebase 設定（あなたのやつに置き換え）=====
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// ===== Firebase 設定（あなたのやつ）=====
 const firebaseConfig = {
   apiKey: "AIzaSyByAjXDKu5doIYKDL3uuU0zqMENxhStFWg",
   authDomain: "skinlog-a06a9.firebaseapp.com",
   projectId: "skinlog-a06a9",
   storageBucket: "skinlog-a06a9.firebasestorage.app",
   messagingSenderId: "784247637066",
-  appId: "1:784247637066:web:ba77376f09feb60aedd2b3",
-  measurementId: "G-7HET8V5RJ1"
+  appId: "1:784247637066:web:ba77376f09feb60aedd2b3"
 };
-
-// Initialize Firebase
-
-const analytics = getAnalytics(app);
-// =========================================
+// ===============================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, query, orderBy, doc, getDoc,
-  serverTimestamp, runTransaction, updateDoc, increment,
-  collectionGroup, limit,
-  setDoc, deleteDoc, where
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  getAuth, signInAnonymously, onAuthStateChanged,
-  GoogleAuthProvider, signInWithPopup, linkWithPopup
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+/**
+ * 重要：
+ * - `app` という変数名は二重宣言が起きやすいので使わない
+ * - ここでは firebaseApp という名前に固定する
+ */
+const firebaseApp = initializeApp(firebaseConfig);
+
+export const db = getFirestore(firebaseApp);
+export const auth = getAuth(firebaseApp);
+
 
 export let currentUid = null;
 export let currentUser = null;
