@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>質問詳細 | 整形相談室</title>
+  <title>質問詳細</title>
   <link rel="stylesheet" href="./style.css"/>
 </head>
 
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="brand">整形相談室（匿名Q&amp;A）</div>
+      <div class="brand">整形相談室</div>
       <div class="tabs">
         <a class="tab" href="./index.html">一覧</a>
         <a class="tab" href="./ask.html">質問する</a>
@@ -18,48 +18,42 @@
       </div>
     </div>
 
-    <div id="maintenanceBox" class="card" style="display:none"></div>
+    <div id="maintenanceBox" class="card" style="display:none;margin-top:12px"></div>
 
+    <!-- 質問 -->
     <div id="qCard" class="card" style="margin-top:12px">
       <div class="muted small">質問</div>
-      <h1 id="qTitle" style="margin:6px 0 10px 0; font-size:22px; line-height:1.2"></h1>
+      <h1 id="qTitle" style="margin:6px 0 8px 0; font-size:22px; line-height:1.2"></h1>
 
-      <div class="row" style="gap:8px; flex-wrap:wrap; margin-bottom:10px">
+      <div class="row" style="gap:8px;flex-wrap:wrap">
         <button id="copyUrlBtn" class="btn ghost">URLコピー</button>
         <button id="watchBtn" class="btn ghost">☆ 保存</button>
         <button id="likeBtn" class="btn ghost">共感</button>
-      </div>
-
-      <div class="row" style="margin-top:6px; gap:8px; flex-wrap:wrap">
         <button id="loginBtn" class="btn ghost" style="width:auto">Googleでログイン（任意）</button>
-        <span class="muted">ランキング狙う人向け。質問だけなら不要。</span>
       </div>
 
-      <div class="muted small" id="qMeta" style="margin-top:10px"></div>
-      <div id="qBody" style="white-space:pre-wrap; margin-top:10px"></div>
-
-      <div id="qDanger" class="danger small" style="display:none; margin-top:10px"></div>
+      <div id="qMeta" class="muted small" style="margin-top:10px"></div>
+      <div id="qBody" style="white-space:pre-wrap;margin-top:10px"></div>
+      <div id="qDanger" class="danger small" style="display:none;margin-top:10px"></div>
     </div>
 
+    <!-- 回答投稿 -->
     <div id="answerComposer" class="card" style="margin-top:12px">
-      <div class="row" style="justify-content:space-between; align-items:center">
+      <div class="row" style="justify-content:space-between;align-items:center">
         <div style="font-weight:700">回答する</div>
         <div class="muted small">（ログイン不要）</div>
       </div>
 
-      <div class="muted small" style="margin-top:6px">できるだけ具体的に。経験談や根拠があると強いです。</div>
-
       <textarea id="ansTa" class="textarea" placeholder="回答を書いてください"></textarea>
 
-      <div class="row" style="gap:8px; flex-wrap:wrap; margin-top:8px">
-        <input id="ansX" class="input" style="flex:1; min-width:220px" placeholder="回答者のX（任意）例：@xxxx / https://x.com/xxxx">
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">
+        <input id="ansX" class="input" style="flex:1;min-width:220px" placeholder="回答者のX（任意）例：@xxxx / https://x.com/xxxx">
         <button id="postAnsBtn" class="btn primary">回答を投稿</button>
       </div>
-
-      <div id="ansWarn" class="danger small" style="display:none; margin-top:8px"></div>
+      <div id="ansWarn" class="danger small" style="display:none;margin-top:8px"></div>
     </div>
 
-    <!-- ★追加：回答並び替え -->
+    <!-- 並び替え -->
     <div class="card" style="margin-top:12px">
       <div class="muted small" style="margin-bottom:6px">回答の並び替え（ベストは常に最上部）</div>
       <select id="answerSortSel" class="select" style="width:100%">
@@ -69,35 +63,38 @@
       </select>
     </div>
 
+    <!-- 回答一覧 -->
     <div id="answersBox" class="card" style="margin-top:12px">
-      <div class="row" style="justify-content:space-between; align-items:center">
+      <div class="row" style="justify-content:space-between;align-items:center">
         <div style="font-weight:700">回答一覧</div>
-        <div class="muted small" id="ansCount"></div>
+        <div id="ansCount" class="muted small"></div>
       </div>
       <div id="answersInner" style="margin-top:10px"></div>
     </div>
 
+    <!-- 関連質問 -->
     <div id="relatedBox" class="card" style="margin-top:12px">
-      <div class="row" style="justify-content:space-between; align-items:center">
+      <div class="row" style="justify-content:space-between;align-items:center">
         <div style="font-weight:700">関連質問</div>
-        <div class="muted small" id="relCount"></div>
+        <div id="relCount" class="muted small"></div>
       </div>
       <div id="relatedInner" style="margin-top:10px"></div>
     </div>
-
   </div>
 
 <script type="module">
   import {
-    // auth + util
-    ensureAnonAuth, optionalGoogleLogin, currentUid, esc, tokenize, andMatch, containsDanger,
+    // auth / util
+    ensureAnonAuth, currentUid, esc, tokenize, containsDanger, optionalGoogleLogin,
 
-    // site
+    // maintenance
     getSiteConfig,
 
     // question
-    getQuestion, updateQuestion, softDeleteQuestion, toggleLikeQuestion, isLiked,
-    toggleWatchQuestion, isWatching, copyToClipboard,
+    getQuestion, listQuestions,
+    toggleWatchQuestion, isWatching,
+    toggleLikeQuestion, isLiked,
+    copyToClipboard,
 
     // answers
     listAnswers, addAnswer, updateAnswer, softDeleteAnswer,
@@ -107,26 +104,20 @@
     listReplies, addReply, updateReply, softDeleteReply,
 
     // reports
-    createReport,
-
-    // related
-    listQuestions
+    createReport
   } from "./app.js";
 
-  // ===== state =====
+  // ========= state =========
   const params = new URLSearchParams(location.search);
   const qid = params.get("id");
-  let qData = null;
+  let qObj = null; // {id,data}
+  let answerSort = "helpful";
 
-  // 回答並び替え状態
-  let answerSort = "helpful"; // helpful/new/old
-
-  // ===== dom =====
+  // ========= dom =========
   const maintenanceBox = document.getElementById("maintenanceBox");
-
   const qTitle = document.getElementById("qTitle");
-  const qBody  = document.getElementById("qBody");
   const qMeta  = document.getElementById("qMeta");
+  const qBody  = document.getElementById("qBody");
   const qDanger = document.getElementById("qDanger");
 
   const copyUrlBtn = document.getElementById("copyUrlBtn");
@@ -140,14 +131,13 @@
   const ansWarn = document.getElementById("ansWarn");
 
   const answerSortSel = document.getElementById("answerSortSel");
-
   const ansCount = document.getElementById("ansCount");
   const answersInner = document.getElementById("answersInner");
 
-  const relatedInner = document.getElementById("relatedInner");
   const relCount = document.getElementById("relCount");
+  const relatedInner = document.getElementById("relatedInner");
 
-  // ===== helpers =====
+  // ========= helpers =========
   function fmtTime(ts){
     try{
       if(!ts) return "";
@@ -164,43 +154,36 @@
   }
 
   function showWarn(el, msg){
-    if(!msg){
-      el.style.display="none";
-      el.textContent="";
-      return;
-    }
-    el.style.display="block";
-    el.textContent=msg;
+    if(!msg){ el.style.display="none"; el.textContent=""; return; }
+    el.style.display="block"; el.textContent=msg;
   }
 
   function parseX(input){
     const s = (input||"").trim();
     if(!s) return "";
-    // @name / name / https://x.com/name
     const m = s.match(/(?:x\.com\/|twitter\.com\/)?@?([A-Za-z0-9_]{1,15})/);
     if(m && m[1]) return "@"+m[1];
+    if(/^https?:\/\//.test(s)) return s.slice(0,200);
     return s.slice(0,80);
   }
 
-  function linkifyX(handleOrUrl){
-    const s = (handleOrUrl||"").trim();
+  function xLinkHtml(xh){
+    const s = (xh||"").trim();
     if(!s) return "";
-    const h = parseX(s);
-    if(h.startsWith("@")){
-      const name = h.slice(1);
-      return `<a href="https://x.com/${esc(name)}" target="_blank" rel="noopener">${esc(h)}</a>`;
+    if(s.startsWith("@")){
+      const name = s.slice(1);
+      return `<a href="https://x.com/${esc(name)}" target="_blank" rel="noopener">${esc(s)}</a>`;
     }
-    // URLっぽいならそのまま
     if(/^https?:\/\//.test(s)){
       return `<a href="${esc(s)}" target="_blank" rel="noopener">X</a>`;
     }
     return esc(s);
   }
 
-  // ===== maintenance =====
+  // ========= maintenance =========
   async function checkMaintenance(){
     const cfg = await getSiteConfig();
-    if(cfg.maintenance){
+    if(cfg?.maintenance){
       maintenanceBox.style.display = "block";
       maintenanceBox.innerHTML = `
         <div style="font-weight:700">現在メンテナンス中</div>
@@ -208,325 +191,64 @@
       `;
     }else{
       maintenanceBox.style.display = "none";
+      maintenanceBox.innerHTML = "";
     }
   }
 
-  // ===== header actions =====
-  async function refreshLikeWatchUI(){
-    const liked = await isLiked(qid);
-    likeBtn.textContent = liked ? "共感済み" : "共感";
-
-    const watching = await isWatching(qid);
-    watchBtn.textContent = watching ? "★ 保存済み" : "☆ 保存";
+  // ========= header UI =========
+  async function refreshLikeWatch(){
+    try{
+      const w = await isWatching(qid);
+      watchBtn.textContent = w ? "★ 保存済み" : "☆ 保存";
+    }catch{}
+    try{
+      const l = await isLiked(qid);
+      likeBtn.textContent = l ? "共感済み" : "共感";
+    }catch{}
   }
 
-  // ===== render question =====
+  // ========= question =========
   async function renderQuestion(){
     if(!qid){
       qTitle.textContent = "URLが不正です";
+      qMeta.textContent = "";
       qBody.textContent = "";
       return;
     }
 
-    const q = await getQuestion(qid);
-    if(!q){
+    qObj = await getQuestion(qid);
+    if(!qObj){
       qTitle.textContent = "質問が見つかりません";
+      qMeta.textContent = "";
       qBody.textContent = "";
       return;
     }
-    qData = q.data;
 
-    qTitle.textContent = qData.title || "(無題)";
-    qBody.textContent  = qData.body || "";
+    const d = qObj.data || {};
+    qTitle.textContent = d.title || "(無題)";
+    qBody.textContent = d.body || "";
 
-    const created = fmtTime(qData.createdAt);
-    const likeC = qData.likeCount || 0;
-    const ansC = qData.answerCount || 0;
-    const best = qData.bestAnswerId ? "🟡 解決" : "🟡 未解決";
+    const created = fmtTime(d.createdAt);
+    const likeC = d.likeCount || 0;
+    const ansC  = d.answerCount || 0;
+    const status = d.bestAnswerId ? "🟡 解決" : "🟡 未解決";
 
-    qMeta.textContent = `共感:${likeC} / 回答:${ansC} / 作成:${created} / ${best}`;
+    qMeta.textContent = `共感:${likeC} / 回答:${ansC} / 作成:${created} / ${status}`;
 
-    // 注意ワード
-    const dangerHit = containsDanger((qData.title||"") + "\n" + (qData.body||""));
-    showWarn(qDanger, dangerHit ? "注意：断定・攻撃ワードが含まれている可能性があります。表現の見直しを推奨。" : "");
+    // 危険ワード注意（表示だけ）
+    const danger = containsDanger((d.title||"") + "\n" + (d.body||""));
+    showWarn(qDanger, danger ? "注意：断定・攻撃ワードが含まれている可能性があります。表現の見直しを推奨。" : "");
 
-    await refreshLikeWatchUI();
+    await refreshLikeWatch();
   }
 
-  // ===== render answers (best fixed + sort) =====
-  async function renderAnswers(){
-    answersInner.innerHTML = `<div class="muted">読み込み中...</div>`;
-
-    const list = await listAnswers(qid);
-    const live = (list||[]).filter(a => !a.data?.deleted);
-
-    ansCount.textContent = `(${live.length}件)`;
-
-    if(!live.length){
-      answersInner.innerHTML = `<div class="muted">まだ回答がありません。</div>`;
-      return;
-    }
-
-    // ベストを先頭に固定
-    const best = live.find(a => a.data?.best);
-    let others = live.filter(a => !a.data?.best);
-
-    // 並び替え（ベスト以外）
-    if(answerSort === "helpful"){
-      others.sort((a,b)=>(b.data?.helpfulCount||0)-(a.data?.helpfulCount||0));
-    }else if(answerSort === "new"){
-      others.sort((a,b)=>(b.data?.createdAt?.seconds||0)-(a.data?.createdAt?.seconds||0));
-    }else if(answerSort === "old"){
-      others.sort((a,b)=>(a.data?.createdAt?.seconds||0)-(b.data?.createdAt?.seconds||0));
-    }
-
-    const final = best ? [best, ...others] : others;
-
-    // いったん空にしてDOMで積む（イベントを壊しにくい）
-    answersInner.innerHTML = "";
-
-    for(const a of final){
-      const d = a.data || {};
-      const mine = d.ownerUid && currentUid && d.ownerUid === currentUid;
-      const isOwner = qData?.ownerUid && currentUid && qData.ownerUid === currentUid; // 質問者か？
-
-      const wrap = document.createElement("div");
-      wrap.className = "ans";
-
-      // ヘッダ/本文
-      const xHtml = d.xHandle ? `<span class="pill">X:${linkifyX(d.xHandle)}</span>` : "";
-
-      wrap.innerHTML = `
-        <div class="ansHead">
-          <b>${d.best ? "🏆 ベストアンサー" : "回答"}</b>
-          <span class="muted small">${esc(fmtTime(d.createdAt))}</span>
-          <span class="pill">参考:${esc(d.helpfulCount||0)}</span>
-          ${xHtml}
-          ${d.best ? `<span class="pill">選ばれました</span>` : ``}
-        </div>
-
-        <div class="ansBody" style="white-space:pre-wrap">${esc(d.body||"")}</div>
-
-        <div class="row" style="gap:8px; flex-wrap:wrap; margin-top:10px">
-          <button class="btn ghost" data-act="helpful" data-aid="${a.id}">参考になった</button>
-          <button class="btn ghost" data-act="report" data-aid="${a.id}">通報</button>
-          ${isOwner && !d.best ? `<button class="btn ghost" data-act="best" data-aid="${a.id}">ベストにする</button>` : ``}
-          ${isOwner ? `<button class="btn ghost" data-act="thanks" data-aid="${a.id}">お礼</button>` : ``}
-          ${mine ? `<button class="btn ghost" data-act="edit" data-aid="${a.id}">編集</button>` : ``}
-          ${mine ? `<button class="btn ghost danger" data-act="del" data-aid="${a.id}">削除</button>` : ``}
-        </div>
-
-        <div id="thBox_${a.id}" class="card" style="display:none; margin-top:10px">
-          <div class="muted small">お礼コメント（質問者のみ）</div>
-          <textarea class="textarea" id="thTa_${a.id}" style="min-height:70px" placeholder="お礼コメントを書いてください"></textarea>
-          <div class="row" style="gap:8px; flex-wrap:wrap; margin-top:6px">
-            <button class="btn primary" data-act="thanksSave" data-aid="${a.id}">保存</button>
-            <button class="btn ghost" data-act="thanksCancel" data-aid="${a.id}">キャンセル</button>
-          </div>
-          <div class="danger small" id="thWarn_${a.id}" style="display:none; margin-top:6px"></div>
-        </div>
-
-        <div id="edBox_${a.id}" class="card" style="display:none; margin-top:10px">
-          <div class="muted small">回答を編集</div>
-          <textarea class="textarea" id="edTa_${a.id}" style="min-height:90px"></textarea>
-          <div class="row" style="gap:8px; flex-wrap:wrap; margin-top:6px">
-            <button class="btn primary" data-act="editSave" data-aid="${a.id}">保存</button>
-            <button class="btn ghost" data-act="editCancel" data-aid="${a.id}">キャンセル</button>
-          </div>
-          <div class="danger small" id="edWarn_${a.id}" style="display:none; margin-top:6px"></div>
-        </div>
-
-        <div style="margin-top:12px">
-          <div class="muted small">返信</div>
-          <div id="replyList_${a.id}" style="margin-top:8px"></div>
-          <!-- ★順番変更：返信一覧の「後」に入力欄 -->
-          <div id="replyComposer_${a.id}" style="margin-top:10px"></div>
-        </div>
-      `;
-
-      answersInner.appendChild(wrap);
-
-      // ボタン状態（参考済み）
-      try{
-        const h = await isHelpful(qid, a.id);
-        if(h){
-          const btn = wrap.querySelector(`[data-act="helpful"][data-aid="${a.id}"]`);
-          if(btn) btn.textContent = "参考済み";
-        }
-      }catch{}
-
-      // お礼既存表示
-      if(d.thanksText){
-        const thBox = wrap.querySelector(`#thBox_${a.id}`);
-        if(thBox){
-          thBox.style.display = "block";
-          const ta = wrap.querySelector(`#thTa_${a.id}`);
-          if(ta) ta.value = d.thanksText;
-        }
-      }
-
-      // 返信：描画 → 返信入力欄
-      await renderReplies(a.id);
-      renderReplyComposer(a.id);
-    }
-
-    // イベント（answersInner全体で一括）
-    answersInner.querySelectorAll("button[data-act]").forEach(btn=>{
-      btn.addEventListener("click", async ()=>{
-        const act = btn.dataset.act;
-        const aid = btn.dataset.aid;
-
-        // helpful
-        if(act === "helpful"){
-          try{
-            const r = await toggleHelpful(qid, aid);
-            btn.textContent = r.helpful ? "参考済み" : "参考になった";
-            await renderQuestion(); // answerCount/likeなどの更新と同様に軽く更新
-            await renderAnswers();  // 数字更新
-          }catch(e){
-            alert("参考の更新に失敗しました");
-            console.error(e);
-          }
-          return;
-        }
-
-        // report
-        if(act === "report"){
-          const reason = prompt("通報理由（任意）");
-          try{
-            await createReport({ type:"answer", qid, aid, reason: reason||"" });
-            alert("通報しました。ご協力ありがとうございます。");
-          }catch(e){
-            alert("通報に失敗しました");
-            console.error(e);
-          }
-          return;
-        }
-
-        // best
-        if(act === "best"){
-          if(!confirm("この回答をベストアンサーにしますか？")) return;
-          try{
-            await setBestAnswer(qid, aid);
-            await renderQuestion();
-            await renderAnswers();
-          }catch(e){
-            alert("ベスト設定に失敗しました（質問者のみ）");
-            console.error(e);
-          }
-          return;
-        }
-
-        // thanks open
-        if(act === "thanks"){
-          const box = document.getElementById(`thBox_${aid}`);
-          if(box) box.style.display = (box.style.display==="none" ? "block" : "none");
-          return;
-        }
-
-        if(act === "thanksCancel"){
-          const box = document.getElementById(`thBox_${aid}`);
-          if(box) box.style.display = "none";
-          return;
-        }
-
-        if(act === "thanksSave"){
-          const ta = document.getElementById(`thTa_${aid}`);
-          const warn = document.getElementById(`thWarn_${aid}`);
-          const text = (ta?.value||"").trim();
-          if(text.length > 400){
-            warn.style.display="block";
-            warn.textContent="お礼コメントは400文字以内にしてください。";
-            return;
-          }
-          try{
-            await setThanks(qid, aid, text);
-            if(warn){ warn.style.display="none"; warn.textContent=""; }
-            alert("保存しました");
-            await renderAnswers();
-          }catch(e){
-            if(warn){
-              warn.style.display="block";
-              warn.textContent="保存に失敗しました（質問者のみ）";
-            }
-            console.error(e);
-          }
-          return;
-        }
-
-        // edit open
-        if(act === "edit"){
-          const box = document.getElementById(`edBox_${aid}`);
-          const ta = document.getElementById(`edTa_${aid}`);
-          if(box){
-            box.style.display = (box.style.display==="none" ? "block" : "none");
-            if(ta){
-              // 現在本文を拾う（表示から）
-              const ansBody = box.parentElement?.querySelector(".ansBody");
-              ta.value = ansBody ? ansBody.textContent : "";
-            }
-          }
-          return;
-        }
-
-        if(act === "editCancel"){
-          const box = document.getElementById(`edBox_${aid}`);
-          if(box) box.style.display="none";
-          return;
-        }
-
-        if(act === "editSave"){
-          const ta = document.getElementById(`edTa_${aid}`);
-          const warn = document.getElementById(`edWarn_${aid}`);
-          const text = (ta?.value||"").trim();
-          if(!text){
-            warn.style.display="block";
-            warn.textContent="本文が空です。";
-            return;
-          }
-          if(text.length > 2000){
-            warn.style.display="block";
-            warn.textContent="本文は2000文字以内にしてください。";
-            return;
-          }
-          try{
-            await updateAnswer(qid, aid, { body:text });
-            if(warn){ warn.style.display="none"; warn.textContent=""; }
-            alert("更新しました");
-            await renderAnswers();
-          }catch(e){
-            if(warn){
-              warn.style.display="block";
-              warn.textContent="更新に失敗しました（自分の投稿のみ）";
-            }
-            console.error(e);
-          }
-          return;
-        }
-
-        // delete
-        if(act === "del"){
-          if(!confirm("この回答を削除（ソフト削除）しますか？")) return;
-          try{
-            await softDeleteAnswer(qid, aid);
-            await renderQuestion();
-            await renderAnswers();
-          }catch(e){
-            alert("削除に失敗しました（自分の投稿のみ）");
-            console.error(e);
-          }
-          return;
-        }
-      });
-    });
-  }
-
-  // ===== replies =====
+  // ========= replies =========
   async function renderReplies(aid){
     const root = document.getElementById("replyList_"+aid);
     if(!root) return;
 
     root.innerHTML = `<span class="muted">読み込み中...</span>`;
+
     let list = [];
     try{
       list = await listReplies(qid, aid);
@@ -537,19 +259,18 @@
     }
 
     const live = (list||[]).filter(r => !r.data?.deleted);
-
     if(!live.length){
       root.innerHTML = `<span class="muted">返信なし</span>`;
       return;
     }
 
-    const html = live.map(r=>{
+    root.innerHTML = live.map(r=>{
       const d = r.data || {};
       const mine = d.ownerUid && currentUid && d.ownerUid === currentUid;
 
       return `
         <div class="card" style="margin:8px 0">
-          <div class="row" style="justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
+          <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap">
             <div class="muted small">${esc(fmtTime(d.createdAt))}</div>
             <div class="row" style="gap:8px">
               <button class="btn ghost" data-ract="rreport" data-aid="${aid}" data-rid="${r.id}">通報</button>
@@ -558,24 +279,22 @@
             </div>
           </div>
 
-          <div id="rb_${aid}_${r.id}" style="white-space:pre-wrap; margin-top:6px">${esc(d.body||"")}</div>
+          <div id="rb_${aid}_${r.id}" style="white-space:pre-wrap;margin-top:6px">${esc(d.body||"")}</div>
 
-          <div id="re_${aid}_${r.id}" class="card" style="display:none; margin-top:10px">
+          <div id="re_${aid}_${r.id}" class="card" style="display:none;margin-top:10px">
             <div class="muted small">返信を編集</div>
             <textarea class="textarea" id="reTa_${aid}_${r.id}" style="min-height:70px"></textarea>
-            <div class="row" style="gap:8px; margin-top:6px">
+            <div class="row" style="gap:8px;margin-top:6px">
               <button class="btn primary" data-ract="rsave" data-aid="${aid}" data-rid="${r.id}">保存</button>
               <button class="btn ghost" data-ract="rcancel" data-aid="${aid}" data-rid="${r.id}">キャンセル</button>
             </div>
-            <div class="danger small" id="reWarn_${aid}_${r.id}" style="display:none; margin-top:6px"></div>
+            <div class="danger small" id="reWarn_${aid}_${r.id}" style="display:none;margin-top:6px"></div>
           </div>
         </div>
       `;
     }).join("");
 
-    root.innerHTML = html;
-
-    // events
+    // 返信イベント
     root.querySelectorAll("button[data-ract]").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
         const act = btn.dataset.ract;
@@ -624,10 +343,11 @@
           }
           try{
             await updateReply(qid, aid, rid, { body:text });
-            if(warn){ warn.style.display="none"; warn.textContent=""; }
+            warn.style.display="none"; warn.textContent="";
             await renderReplies(aid);
           }catch(e){
-            if(warn){ warn.style.display="block"; warn.textContent="更新に失敗しました（自分の投稿のみ）"; }
+            warn.style.display="block";
+            warn.textContent="更新に失敗しました（自分の投稿のみ）";
             console.error(e);
           }
           return;
@@ -652,18 +372,19 @@
     const box = document.getElementById("replyComposer_"+aid);
     if(!box) return;
 
+    // ★重要：返信入力欄は「返信一覧の下」に固定（あなたの要望）
     box.innerHTML = `
       <div class="card">
         <textarea class="textarea" id="rpTa_${aid}" style="min-height:70px" placeholder="回答への返信を書きます（ログイン不要）"></textarea>
-        <div class="row" style="gap:8px; margin-top:8px">
+        <div class="row" style="gap:8px;margin-top:8px">
           <button class="btn primary" data-rp="post" data-aid="${aid}">返信を投稿</button>
         </div>
-        <div class="danger small" id="rpWarn_${aid}" style="display:none; margin-top:6px"></div>
+        <div class="danger small" id="rpWarn_${aid}" style="display:none;margin-top:6px"></div>
       </div>
     `;
 
-    const post = box.querySelector(`button[data-rp="post"][data-aid="${aid}"]`);
-    post.addEventListener("click", async ()=>{
+    const btn = box.querySelector(`button[data-rp="post"][data-aid="${aid}"]`);
+    btn.addEventListener("click", async ()=>{
       const ta = document.getElementById("rpTa_"+aid);
       const warn = document.getElementById("rpWarn_"+aid);
       const text = (ta?.value||"").trim();
@@ -681,19 +402,269 @@
         await addReply(qid, aid, { body:text });
         ta.value = "";
         warn.style.display="none"; warn.textContent="";
-        await renderReplies(aid); // 返信更新
+        await renderReplies(aid);
       }catch(e){
-        warn.style.display="block";
-        warn.textContent="投稿に失敗しました";
+        warn.style.display="block"; warn.textContent="投稿に失敗しました";
         console.error(e);
       }
     });
   }
 
-  // ===== related =====
+  // ========= answers =========
+  async function renderAnswers(){
+    answersInner.innerHTML = `<div class="muted">読み込み中...</div>`;
+
+    let list = [];
+    try{
+      list = await listAnswers(qid);
+    }catch(e){
+      answersInner.innerHTML = `<div class="danger small">回答の取得に失敗しました</div>`;
+      console.error(e);
+      return;
+    }
+
+    const live = (list||[]).filter(a => !a.data?.deleted);
+    ansCount.textContent = `(${live.length}件)`;
+
+    if(!live.length){
+      answersInner.innerHTML = `<div class="muted">まだ回答がありません。</div>`;
+      return;
+    }
+
+    // ベスト先頭固定
+    const best = live.find(a => a.data?.best);
+    let others = live.filter(a => !a.data?.best);
+
+    // 並び替え（ベスト以外）
+    if(answerSort === "helpful"){
+      others.sort((a,b)=>(b.data?.helpfulCount||0)-(a.data?.helpfulCount||0));
+    }else if(answerSort === "new"){
+      others.sort((a,b)=>(b.data?.createdAt?.seconds||0)-(a.data?.createdAt?.seconds||0));
+    }else if(answerSort === "old"){
+      others.sort((a,b)=>(a.data?.createdAt?.seconds||0)-(b.data?.createdAt?.seconds||0));
+    }
+
+    const final = best ? [best, ...others] : others;
+    answersInner.innerHTML = "";
+
+    const qOwner = qObj?.data?.ownerUid || null; // 質問者UID
+    const isQuestionOwner = qOwner && currentUid && qOwner === currentUid;
+
+    for(const a of final){
+      const d = a.data || {};
+      const mine = d.ownerUid && currentUid && d.ownerUid === currentUid;
+
+      const wrap = document.createElement("div");
+      wrap.className = "card";
+      wrap.style.margin = "10px 0";
+
+      const xHtml = d.xHandle ? `<span class="pill">X:${xLinkHtml(d.xHandle)}</span>` : "";
+
+      wrap.innerHTML = `
+        <div class="row" style="justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <b>${d.best ? "🏆ベストアンサー" : "回答"}</b>
+            <span class="muted small" style="margin-left:8px">${esc(fmtTime(d.createdAt))}</span>
+          </div>
+          <div class="row" style="gap:8px;flex-wrap:wrap">
+            <span class="pill">参考:${esc(d.helpfulCount||0)}</span>
+            ${xHtml}
+          </div>
+        </div>
+
+        <div class="ansBody" style="white-space:pre-wrap;margin-top:8px">${esc(d.body||"")}</div>
+
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
+          <button class="btn ghost" data-act="helpful" data-aid="${a.id}">参考になった</button>
+          <button class="btn ghost" data-act="report" data-aid="${a.id}">通報</button>
+
+          ${isQuestionOwner && !d.best ? `<button class="btn ghost" data-act="best" data-aid="${a.id}">ベストにする</button>` : ``}
+          ${isQuestionOwner ? `<button class="btn ghost" data-act="thanks" data-aid="${a.id}">お礼</button>` : ``}
+
+          ${mine ? `<button class="btn ghost" data-act="edit" data-aid="${a.id}">編集</button>` : ``}
+          ${mine ? `<button class="btn ghost danger" data-act="del" data-aid="${a.id}">削除</button>` : ``}
+        </div>
+
+        <div id="thBox_${a.id}" class="card" style="display:none;margin-top:10px">
+          <div class="muted small">お礼コメント（質問者のみ）</div>
+          <textarea class="textarea" id="thTa_${a.id}" style="min-height:70px" placeholder="お礼コメントを書いてください"></textarea>
+          <div class="row" style="gap:8px;margin-top:6px">
+            <button class="btn primary" data-act="thanksSave" data-aid="${a.id}">保存</button>
+            <button class="btn ghost" data-act="thanksCancel" data-aid="${a.id}">キャンセル</button>
+          </div>
+          <div class="danger small" id="thWarn_${a.id}" style="display:none;margin-top:6px"></div>
+        </div>
+
+        <div id="edBox_${a.id}" class="card" style="display:none;margin-top:10px">
+          <div class="muted small">回答を編集</div>
+          <textarea class="textarea" id="edTa_${a.id}" style="min-height:90px"></textarea>
+          <div class="row" style="gap:8px;margin-top:6px">
+            <button class="btn primary" data-act="editSave" data-aid="${a.id}">保存</button>
+            <button class="btn ghost" data-act="editCancel" data-aid="${a.id}">キャンセル</button>
+          </div>
+          <div class="danger small" id="edWarn_${a.id}" style="display:none;margin-top:6px"></div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="muted small">返信</div>
+          <div id="replyList_${a.id}" style="margin-top:8px"></div>
+          <div id="replyComposer_${a.id}" style="margin-top:10px"></div>
+        </div>
+      `;
+
+      answersInner.appendChild(wrap);
+
+      // helpful済み反映
+      try{
+        const done = await isHelpful(qid, a.id);
+        if(done){
+          const b = wrap.querySelector(`[data-act="helpful"][data-aid="${a.id}"]`);
+          if(b) b.textContent = "参考済み";
+        }
+      }catch{}
+
+      // 返信描画 & 入力欄
+      await renderReplies(a.id);
+      renderReplyComposer(a.id);
+
+      // 回答のボタンイベント
+      wrap.querySelectorAll("button[data-act]").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const act = btn.dataset.act;
+          const aid = btn.dataset.aid;
+
+          if(act === "helpful"){
+            try{
+              const r = await toggleHelpful(qid, aid);
+              btn.textContent = r.helpful ? "参考済み" : "参考になった";
+              await renderAnswers();
+              await renderQuestion(); // 回答数/解決表示更新
+            }catch(e){
+              alert("更新に失敗しました");
+              console.error(e);
+            }
+            return;
+          }
+
+          if(act === "report"){
+            const reason = prompt("通報理由（任意）");
+            try{
+              await createReport({ type:"answer", qid, aid, reason: reason||"" });
+              alert("通報しました。");
+            }catch(e){
+              alert("通報に失敗しました");
+              console.error(e);
+            }
+            return;
+          }
+
+          if(act === "best"){
+            if(!confirm("この回答をベストアンサーにしますか？")) return;
+            try{
+              await setBestAnswer(qid, aid);
+              await renderQuestion();
+              await renderAnswers();
+            }catch(e){
+              alert("ベスト設定に失敗しました（質問者のみ）");
+              console.error(e);
+            }
+            return;
+          }
+
+          if(act === "thanks"){
+            const box = document.getElementById(`thBox_${aid}`);
+            if(box) box.style.display = (box.style.display==="none" ? "block" : "none");
+            return;
+          }
+
+          if(act === "thanksCancel"){
+            const box = document.getElementById(`thBox_${aid}`);
+            if(box) box.style.display = "none";
+            return;
+          }
+
+          if(act === "thanksSave"){
+            const ta = document.getElementById(`thTa_${aid}`);
+            const warn = document.getElementById(`thWarn_${aid}`);
+            const text = (ta?.value||"").trim();
+            if(text.length > 400){
+              warn.style.display="block"; warn.textContent="お礼は400文字以内にしてください。";
+              return;
+            }
+            try{
+              await setThanks(qid, aid, text);
+              warn.style.display="none"; warn.textContent="";
+              alert("保存しました");
+              await renderAnswers();
+            }catch(e){
+              warn.style.display="block";
+              warn.textContent="保存に失敗しました（質問者のみ）";
+              console.error(e);
+            }
+            return;
+          }
+
+          if(act === "edit"){
+            const box = document.getElementById(`edBox_${aid}`);
+            const ta  = document.getElementById(`edTa_${aid}`);
+            const bodyEl = wrap.querySelector(".ansBody");
+            if(box && ta){
+              box.style.display = (box.style.display==="none" ? "block" : "none");
+              ta.value = bodyEl ? bodyEl.textContent : "";
+            }
+            return;
+          }
+
+          if(act === "editCancel"){
+            const box = document.getElementById(`edBox_${aid}`);
+            if(box) box.style.display="none";
+            return;
+          }
+
+          if(act === "editSave"){
+            const ta = document.getElementById(`edTa_${aid}`);
+            const warn = document.getElementById(`edWarn_${aid}`);
+            const text = (ta?.value||"").trim();
+            if(!text){
+              warn.style.display="block"; warn.textContent="本文が空です。";
+              return;
+            }
+            if(text.length > 2000){
+              warn.style.display="block"; warn.textContent="本文は2000文字以内にしてください。";
+              return;
+            }
+            try{
+              await updateAnswer(qid, aid, { body:text });
+              warn.style.display="none"; warn.textContent="";
+              alert("更新しました");
+              await renderAnswers();
+            }catch(e){
+              warn.style.display="block";
+              warn.textContent="更新に失敗しました（自分の投稿のみ）";
+              console.error(e);
+            }
+            return;
+          }
+
+          if(act === "del"){
+            if(!confirm("この回答を削除（ソフト削除）しますか？")) return;
+            try{
+              await softDeleteAnswer(qid, aid);
+              await renderQuestion();
+              await renderAnswers();
+            }catch(e){
+              alert("削除に失敗しました（自分の投稿のみ）");
+              console.error(e);
+            }
+          }
+        });
+      });
+    }
+  }
+
+  // ========= related =========
   async function renderRelated(){
     relatedInner.innerHTML = `<div class="muted">読み込み中...</div>`;
-
     let all = [];
     try{
       all = await listQuestions();
@@ -703,27 +674,26 @@
       return;
     }
 
-    const me = qData || {};
+    const me = qObj?.data || {};
     const tokens = tokenize((me.title||"") + " " + (me.body||"")).slice(0,10);
 
-    const candidates = all
+    const candidates = (all||[])
       .filter(x => x.id !== qid)
       .filter(x => !x.data?.deleted)
       .map(x=>{
         const d = x.data || {};
-        const hay = (d.title||"") + " " + (d.body||"");
-        // ゆるいスコア（含有数）
+        const hay = ((d.title||"") + " " + (d.body||"")).toLowerCase();
         let score = 0;
         for(const t of tokens){
-          if(t && hay.toLowerCase().includes(t)) score++;
+          if(t && hay.includes(String(t).toLowerCase())) score++;
         }
         return { id:x.id, data:d, score };
       })
-      .filter(x => x.score >= 2) // 近いものだけ
+      .filter(x => x.score >= 2)
       .sort((a,b)=>b.score - a.score)
       .slice(0, 8);
 
-    relCount.textContent = `${candidates.length}件表示`;
+    relCount.textContent = `${candidates.length}件`;
 
     if(!candidates.length){
       relatedInner.innerHTML = `<div class="muted">関連質問はまだありません</div>`;
@@ -732,20 +702,18 @@
 
     relatedInner.innerHTML = candidates.map(x=>{
       const d = x.data || {};
-      const sub = (d.body||"").trim().slice(0, 40);
-      const likeC = d.likeCount||0;
-      const ansC = d.answerCount||0;
+      const sub = (d.body||"").trim().slice(0,60);
       return `
-        <a class="card" href="./q.html?id=${encodeURIComponent(x.id)}" style="display:block; text-decoration:none; color:inherit; margin:8px 0">
+        <a class="card" href="./q.html?id=${encodeURIComponent(x.id)}" style="display:block;text-decoration:none;color:inherit;margin:8px 0">
           <div style="font-weight:700">${esc(d.title||"(無題)")}</div>
-          <div class="muted small" style="margin-top:4px">${esc(sub)}${sub.length>=40 ? "…" : ""}</div>
-          <div class="muted small" style="margin-top:6px">${likeC}共感 / ${ansC}回答</div>
+          <div class="muted small" style="margin-top:4px">${esc(sub)}${sub.length>=60?"…":""}</div>
+          <div class="muted small" style="margin-top:6px">${d.likeCount||0}共感 / ${d.answerCount||0}回答</div>
         </a>
       `;
     }).join("");
   }
 
-  // ===== boot =====
+  // ========= boot =========
   async function boot(){
     await ensureAnonAuth();
     await checkMaintenance();
@@ -755,14 +723,14 @@
       return;
     }
 
-    // sort UI
+    // sort
     answerSortSel.value = answerSort;
     answerSortSel.addEventListener("change", async ()=>{
       answerSort = answerSortSel.value;
       await renderAnswers();
     });
 
-    // header buttons
+    // header btns
     copyUrlBtn.addEventListener("click", async ()=>{
       await copyToClipboard(location.href);
       alert("URLをコピーしました");
@@ -791,14 +759,10 @@
 
     loginBtn.addEventListener("click", async ()=>{
       const r = await optionalGoogleLogin();
-      if(r.ok){
-        alert("ログインしました（任意）");
-      }else{
-        alert("ログインに失敗しました：" + (r.error||""));
-      }
+      if(r.ok) alert("ログインしました（任意）");
+      else alert("ログイン失敗：" + (r.error||""));
     });
 
-    // post answer
     postAnsBtn.addEventListener("click", async ()=>{
       showWarn(ansWarn, "");
       const body = (ansTa.value||"").trim();
@@ -812,6 +776,10 @@
         showWarn(ansWarn, "本文は2000文字以内にしてください。");
         return;
       }
+      if(containsDanger(body)){
+        showWarn(ansWarn, "注意：断定・攻撃ワードが含まれている可能性があります。表現を見直してください。");
+        return;
+      }
 
       try{
         await addAnswer(qid, { body, xHandle:xh });
@@ -820,12 +788,11 @@
         await renderQuestion();
         await renderAnswers();
       }catch(e){
-        showWarn(ansWarn, "投稿に失敗しました。");
+        showWarn(ansWarn, "投稿に失敗しました");
         console.error(e);
       }
     });
 
-    // 初期描画
     await renderQuestion();
     await renderAnswers();
     await renderRelated();
@@ -835,4 +802,3 @@
 </script>
 </body>
 </html>
-
