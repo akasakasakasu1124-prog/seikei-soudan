@@ -208,7 +208,7 @@
   }
 
   // ========= question =========
-  async function renderQuestion(){
+  async function renderQuestion (){
     if(!qid){
       qTitle.textContent = "URLが不正です";
       qMeta.textContent = "";
@@ -675,7 +675,23 @@ if(!listEl) return;
 
   try{
     // いま見てる質問
-    const me = (qData || {}).data || {};
+    qObj = await getQuestion(qid);
+    if(!qObj){
+      qTitle.textContent = "質問が見つかりません";
+      qMeta.textContent = "";
+      qBody.textContent = "";
+      return;
+    }
+
+    const d = qObj.data || {};
+    qTitle.textContent = d.title || "(無題)";
+    qBody.textContent = d.body || "";
+
+    const created = fmtTime(d.createdAt);
+    const likeC = d.likeCount || 0;
+    const ansC  = d.answerCount || 0;
+    const status = d.bestAnswerId ? "🟡 解決" : "🟡 未解決";
+    const me = (qObj || {}).data || {};
     const meTitle = me.title || "";
     const meBody  = me.body || "";
     const meCat   = me.category || "";
