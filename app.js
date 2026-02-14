@@ -23,6 +23,7 @@ import {
   GoogleAuthProvider, signInWithPopup, linkWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+
 /**
  * 重要：
  * - `app` という変数名は二重宣言が起きやすいので使わない
