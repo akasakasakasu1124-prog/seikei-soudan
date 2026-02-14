@@ -158,6 +158,9 @@ export async function markNotificationRead(nid){
 export async function createQuestion(payload){
   await ensureAnonAuth();
   payload.ownerUid = currentUid;
+   // ★ランキング用：Googleログイン済みかどうか（匿名ならfalse）
+  // optionalGoogleLogin で link/signin していれば isAnonymous が false になる
+  payload.isGoogleUser = !(currentUser?.isAnonymous);
   payload.createdAt = serverTimestamp();
   payload.updatedAt = null;
   payload.deleted = false;
@@ -267,6 +270,7 @@ export async function listAnswers(qid){
 
 export async function addAnswer(qid, payload){
   await ensureAnonAuth();
+  payload.isGoogleUser = !(currentUser?.isAnonymous);
   payload.ownerUid = currentUid;
   payload.createdAt = serverTimestamp();
   payload.updatedAt = null;

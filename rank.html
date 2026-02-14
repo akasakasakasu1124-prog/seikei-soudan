@@ -25,6 +25,14 @@
       ※匿名のままでも参加できますが、端末変更などでIDが変わることがあります。ガチ勢はGoogleログイン推奨。<br>
       ※Xは「回答投稿時に入力されたもの」を自動で表示します（代表1つ）。
     </div>
+    <div>
+  <label>表示対象</label>
+  <select id="who">
+    <option value="gx" selected>Google or X のみ（匿名除外）</option>
+    <option value="g">Googleログインのみ</option>
+    <option value="x">X表示のみ</option>
+  </select>
+</div>
 
     <div class="grid" style="margin-top:12px">
       <div>
@@ -58,52 +66,27 @@
 <script type="module">
   import { getLeaderboardSample, esc } from "./app.js";
 
-  // X表示用（rank.html内で完結）
-  function xToHtml(xh){
-    const s = String(xh || "").trim();
-    if(!s) return "";
-    if(s.startsWith("@")){
-      const name = s.slice(1);
-      return `<a href="https://x.com/${esc(name)}" target="_blank" rel="noopener">${esc(s)}</a>`;
-    }
-    if(/^https?:\/\//.test(s)){
-      return `<a href="${esc(s)}" target="_blank" rel="noopener">X</a>`;
-    }
-    return `<span class="kbd">${esc(s)}</span>`;
-  }
-
-  // modeに応じて強調する表
   function renderTable(rows, mode){
-    const thR = (t, active)=>`<th style="text-align:right;border-bottom:1px solid #eee;padding:8px;${active?'font-weight:900;':''}">${t}</th>`;
-    const tdR = (v, active)=>`<td style="padding:8px;border-bottom:1px solid #f1f1f1;text-align:right">${active?`<b>${v}</b>`:`${v}`}</td>`;
+    const label =
+      mode==="best" ? "ベスト" :
+      mode==="help" ? "参考合計" :
+      "回答数";
 
     return `
       <table style="width:100%;border-collapse:collapse">
         <thead>
           <tr>
             <th style="text-align:left;border-bottom:1px solid #eee;padding:8px">順位</th>
-            <th style="text-align:left;border-bottom:1px solid #eee;padding:8px">ユーザーID（簡略）</th>
-            <th style="text-align:left;border-bottom:1px solid #eee;padding:8px">X</th>
-            ${thR("総合", mode==="mix")}
-            ${thR("ベスト", mode==="best")}
-            ${thR("参考合計", mode==="help")}
-            ${thR("回答数", mode==="ans")}
+            <th style="text-align:left;border-bottom:1px solid #eee;padding:8px">表示名</th>
+            <th style="text-align:right;border-bottom:1px solid #eee;padding:8px">${label}</th>
           </tr>
         </thead>
         <tbody>
           ${rows.map((r,i)=>`
             <tr>
               <td style="padding:8px;border-bottom:1px solid #f1f1f1">${i+1}</td>
-              <td style="padding:8px;border-bottom:1px solid #f1f1f1">
-                <span class="kbd">${esc(r.uid.slice(0,10))}</span>
-              </td>
-              <td style="padding:8px;border-bottom:1px solid #f1f1f1">
-                ${r.xHtml || `<span class="muted">-</span>`}
-              </td>
-              ${tdR(r.mix, mode==="mix")}
-              ${tdR(r.best, mode==="best")}
-              ${tdR(r.help, mode==="help")}
-              ${tdR(r.ans, mode==="ans")}
+              <td style="padding:8px;border-bottom:1px solid #f1f1f1">${r.name}</td>
+              <td style="padding:8px;border-bottom:1px solid #f1f1f1;text-align:right"><b>${r.value}</b></td>
             </tr>
           `).join("")}
         </tbody>
@@ -111,18 +94,28 @@
     `;
   }
 
+  function pickDisplayName(u){
+    // XがあればXを優先表示、それ以外はUID短縮
+    if(u.x) {
+      // Xの文字列は @xxxx 形式想定
+      return `<span class="kbd">${esc(u.x)}</span>`;
+    }
+    return `<span class="kbd">${esc(u.uid.slice(0,10))}</span>`;
+  }
+
   async function load(){
-    const status = document.getElementById("status");
+    const statusEl = document.getElementById("status");
     const mode = document.getElementById("mode").value;
     const sample = Number(document.getElementById("sample").value);
+    const who = document.getElementById("who").value; // gx / g / x
 
-    status.textContent = "集計中…";
+    statusEl.textContent = "集計中…";
 
     const answers = await getLeaderboardSample(sample);
 
     // uidごとに集計
-    const map = new Map(); // uid -> {best, help, ans}
-    const xMap = new Map(); // uid -> Map(xHandle -> count)
+    // usersMap: uid -> { uid, best, help, ans, isGoogle, x }
+    const usersMap = new Map();
 
     for(const a of answers){
       const d = a.data || {};
@@ -131,81 +124,76 @@
       const uid = d.ownerUid;
       if(!uid) continue;
 
-      const cur = map.get(uid) || { best:0, help:0, ans:0 };
-      cur.ans += 1;
-      cur.help += Number(d.helpfulCount || 0);
-      if(d.best) cur.best += 1;
-      map.set(uid, cur);
+      const cur = usersMap.get(uid) || {
+        uid,
+        best: 0,
+        help: 0,
+        ans: 0,
+        isGoogle: false,  // answersに保存されたフラグ（今後の回答から）
+        x: ""             // @handle
+      };
 
-      // X集計（最頻出を代表にする）
+      // 回答の集計
+      cur.ans += 1;
+      cur.help += (d.helpfulCount || 0);
+      if(d.best) cur.best += 1;
+
+      // Google判定（answersに入ってる前提。無い過去データは false 扱い）
+      if(d.isGoogleUser === true) cur.isGoogle = true;
+
+      // X判定（1回でも書いたら保持）
       const xh = String(d.xHandle || "").trim();
-      if(xh){
-        if(!xMap.has(uid)) xMap.set(uid, new Map());
-        const m = xMap.get(uid);
-        m.set(xh, (m.get(xh) || 0) + 1);
-      }
+      if(xh && !cur.x) cur.x = xh;
+
+      usersMap.set(uid, cur);
     }
 
-    // 総合スコア（調整可）
-    const scoreMix = (v)=> (v.ans * 1) + (v.best * 5) + (v.help * 0.2);
+    // 表示対象フィルタ（匿名を隠す）
+    const eligible = (u)=>{
+      const hasX = !!u.x;
+      const isG  = (u.isGoogle === true);
+      if(who === "g") return isG;
+      if(who === "x") return hasX;
+      return (isG || hasX); // gx
+    };
 
-    // rows作成（4指標＋X）
-    let rows = [...map.entries()].map(([uid,v])=>{
-      // 代表X（最頻出）
-      let bestX = "";
-      const mx = xMap.get(uid);
-      if(mx){
-        let max = 0;
-        for(const [k,c] of mx.entries()){
-          if(c > max){ max = c; bestX = k; }
-        }
-      }
+    // rows生成
+    const rows = [...usersMap.values()]
+      .filter(u => eligible(u))
+      .map(u => {
+        const value =
+          mode==="best" ? u.best :
+          mode==="help" ? u.help :
+          u.ans;
 
-      const mixRaw = scoreMix(v);
-      return {
-        uid,
-        xHtml: bestX ? xToHtml(bestX) : "",
-        mix: Math.round(mixRaw * 10) / 10,
-        best: v.best,
-        help: v.help,
-        ans: v.ans
-      };
-    });
+        return {
+          uid: u.uid,
+          name: pickDisplayName(u),
+          value
+        };
+      })
+      .filter(r => r.value > 0)
+      .sort((a,b)=> b.value - a.value)
+      .slice(0,50);
 
-    // modeに応じて0除外
-    rows = rows.filter(r=>{
-      if(mode==="mix") return r.mix > 0;
-      if(mode==="best") return r.best > 0;
-      if(mode==="help") return r.help > 0;
-      return r.ans > 0;
-    });
+    statusEl.textContent = rows.length
+      ? ""
+      : "まだデータがありません（条件に合う回答者がいない / サンプル数が少ない可能性）";
 
-    // modeに応じてソート
-    const key = mode==="mix" ? "mix" : mode==="best" ? "best" : mode==="help" ? "help" : "ans";
-    rows.sort((a,b)=>{
-      if(b[key] !== a[key]) return b[key] - a[key];
-      // tie-break
-      if(b.best !== a.best) return b.best - a.best;
-      if(b.help !== a.help) return b.help - a.help;
-      return b.ans - a.ans;
-    });
-
-    rows = rows.slice(0, 50);
-
-    status.textContent = rows.length ? "" : "まだデータがありません（回答が増えるとランキングが出ます）";
     document.getElementById("list").innerHTML = rows.length ? renderTable(rows, mode) : "";
   }
 
-  ["mode","sample"].forEach(id=>document.getElementById(id).addEventListener("change", load));
-  load().catch(e=>{
-  console.error(e);
-  const code = e?.code ? `(${e.code}) ` : "";
-  const msg  = e?.message ? e.message : String(e);
-  document.getElementById("status").textContent =
-    `読み込みに失敗: ${code}${msg}`;
-});
+  ["mode","sample","who"].forEach(id=>{
+    document.getElementById(id).addEventListener("change", load);
+  });
 
-  
+  load().catch(e=>{
+    console.error(e);
+    const code = e?.code ? `(${e.code}) ` : "";
+    const msg  = e?.message ? e.message : String(e);
+    document.getElementById("status").textContent = `読み込みに失敗: ${code}${msg}`;
+  });
 </script>
+
 </body>
 </html>
