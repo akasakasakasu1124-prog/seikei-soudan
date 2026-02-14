@@ -198,9 +198,14 @@
 
   ["mode","sample"].forEach(id=>document.getElementById(id).addEventListener("change", load));
   load().catch(e=>{
-    console.error(e);
-    document.getElementById("status").textContent = "読み込みに失敗しました（コンソールを確認）";
-  });
+  console.error(e);
+  const code = e?.code ? `(${e.code}) ` : "";
+  const msg  = e?.message ? e.message : String(e);
+  document.getElementById("status").textContent =
+    `読み込みに失敗: ${code}${msg}`;
+});
+
+  
 </script>
 </body>
 </html>
