@@ -174,27 +174,27 @@ export async function listQuestions(){
 // ===== 質問 =====
 let _questionsCache = null;
 let _questionsCacheAt = 0;
-const QUESTIONS_CACHE_MS = 60 * 1000; // 60秒キャッシュ（好みで調整）
+const QUESTIONS_CACHE_MS = 60 * 1000; // 60秒キャッシュ
 
-export async function listQuestions({ force=false } = {}){
+async function _listQuestions({ force=false } = {}){
   await ensureAnonAuth();
 
-  // キャッシュが新しければそれを返す
   const now = Date.now();
   if(!force && _questionsCache && (now - _questionsCacheAt) < QUESTIONS_CACHE_MS){
     return _questionsCache;
   }
 
-  const qy = query(collection(db,"questions"), orderBy("createdAt","desc"));
+  const qy = query(collection(db, "questions"), orderBy("createdAt", "desc"));
   const snap = await getDocs(qy);
 
-  const out=[];
-  snap.forEach(d=>out.push({id:d.id, data:d.data()}));
+  const out = [];
+  snap.forEach(d => out.push({ id:d.id, data:d.data() }));
 
   _questionsCache = out;
   _questionsCacheAt = now;
   return out;
 }
+
 }
 export async function getQuestion(qid){
   await ensureAnonAuth();
